@@ -2,726 +2,843 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Expediente Clínico Blindado - Delta Dental Group</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expediente Clínico Odontológico Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        input, select, textarea {
-            font-size: 16px !important;
-            background-color: #0b1329 !important;
-            color: #ffffff !important;
-        }
-        body {
-            -webkit-tap-highlight-color: transparent;
-            background-color: #070b19;
-            color: #f1f5f9;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overscroll-behavior-y: none;
-        }
-        canvas {
-            touch-action: none;
-            background-color: #0b1329;
-        }
-        input:disabled, textarea:disabled, select:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            background-color: #050814 !important;
-            border-color: #1e293b !important;
-        }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #070b19; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-
+        .diente-btn { transition: all 0.15s ease; }
         @media print {
-            body { background-color: #ffffff !important; color: #000000 !important; }
+            body * { visibility: hidden; }
+            #seccion-impresion, #seccion-impresion * { visibility: visible; }
+            #seccion-impresion { position: absolute; left: 0; top: 0; width: 100%; }
             .no-print { display: none !important; }
-            input, select, textarea { background-color: #ffffff !important; color: #000000 !important; border: 1px solid #ccc !important; }
-            div { background-color: transparent !important; border-color: #ddd !important; box-shadow: none !important; }
         }
     </style>
 </head>
-<body class="min-h-screen p-3 md:p-6 lg:p-10">
+<body class="bg-slate-100 font-sans p-4 sm:p-6">
 
-    <div class="max-w-6xl mx-auto bg-slate-950 border border-slate-800/80 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl">
+    <div class="max-w-6xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden p-6 sm:p-8 space-y-6">
         
-        <!-- Header Corporativo -->
-        <div class="bg-gradient-to-r from-blue-950 via-slate-900 to-slate-950 p-6 md:p-8 border-b border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 bg-blue-600/20 border border-blue-500/30 rounded-2xl flex items-center justify-center text-blue-400 font-bold text-xl shadow-inner">
-                    🦷
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs uppercase tracking-widest text-blue-400 font-bold">Delta Dental Group</span>
-                        <span class="bg-blue-500/10 text-blue-400 text-[10px] px-2 py-0.5 rounded-full border border-blue-500/20">NOM-013 / LFPDPPP</span>
-                    </div>
-                    <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight mt-0.5">Expediente Clínico con Sello de Integridad</h1>
-                </div>
+        <!-- Barra Superior -->
+        <div class="border-b pb-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 no-print">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Expediente Clínico y Odontograma Pro</h1>
+                <p class="text-sm text-slate-500">Viñetas de notas acumulables por fecha de evolución, múltiples tratamientos y validación</p>
             </div>
-            
-            <!-- Controles de Datos JSON y Fecha -->
-            <div class="flex flex-wrap items-center gap-3 no-print">
-                <button type="button" onclick="exportarJSON()" class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-2 rounded-xl border border-slate-800 text-xs flex items-center gap-1.5 transition-all shadow-sm">
-                    📥 Exportar JSON
-                </button>
-                <label class="bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white px-3 py-2 rounded-xl border border-slate-800 text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer">
-                    📤 Importar JSON
-                    <input type="file" id="importFile" accept=".json" onchange="importarJSON(event)" class="hidden">
-                </label>
-                <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-2 rounded-xl border border-slate-800 text-xs text-slate-300">
-                    <span>📅</span>
-                    <span id="fecha-actual" class="font-medium text-white"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Buscador de Pacientes Locales -->
-        <div class="bg-blue-950/30 border-b border-slate-800 p-4 px-6 flex flex-col sm:flex-row items-center justify-between gap-3 no-print">
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">🔍 Consultar Paciente Guardado:</span>
-            </div>
-            <div class="flex items-center gap-2 w-full sm:w-96">
-                <select id="buscadorPacientes" onchange="cargarPacienteSeleccionado()" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-blue-500">
-                    <option value="">-- Seleccione un expediente guardado en este iPad --</option>
+            <div class="flex flex-wrap gap-2 w-full lg:w-auto items-center">
+                <select id="selector-pacientes" onchange="cargarPaciente()" class="border border-slate-300 rounded-xl px-3 py-2 text-sm bg-slate-50 flex-1 sm:w-64 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <option value="">-- Seleccionar Paciente --</option>
                 </select>
-                <button type="button" onclick="nuevoExpediente()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2.5 rounded-xl text-xs border border-slate-700 whitespace-nowrap">Nuevo</button>
+                <button type="button" onclick="nuevoPaciente()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-xl font-medium transition whitespace-nowrap shadow-sm cursor-pointer">+ Nuevo Paciente</button>
+                <button type="button" onclick="imprimirResumen()" class="bg-slate-800 hover:bg-slate-900 text-white text-sm px-4 py-2 rounded-xl font-medium transition whitespace-nowrap shadow-sm cursor-pointer">🖨️ Imprimir Resumen</button>
             </div>
         </div>
 
-        <!-- Formulario Profesional -->
-        <form id="hcForm" class="p-6 md:p-8 space-y-8">
-            
-            <!-- 1. Ficha de Identificación -->
-            <div class="bg-slate-900/50 border border-slate-800/60 rounded-2xl p-6 shadow-sm space-y-5">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h2 class="text-base font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. Ficha de Identificación
-                    </h2>
-                    <span class="text-xs text-slate-500">Datos Generales del Paciente</span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Nombre Completo del Paciente</label>
-                        <div class="relative flex items-center">
-                            <input type="text" id="nombre" required placeholder="Nombre y apellidos" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm">
-                            <button type="button" onclick="dictarVoz('nombre')" class="dict-btn no-print absolute right-2.5 bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition-all">🎙️ Dictar</button>
+        <!-- Respaldo de Base de Datos -->
+        <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 flex flex-col sm:flex-row justify-between items-center gap-3 no-print">
+            <div>
+                <h3 class="text-xs font-bold text-amber-900 uppercase tracking-wider">Base de Datos y Respaldo Local</h3>
+                <p class="text-xs text-amber-700">Exporta tu archivo .json para respaldar o llevar a otro dispositivo.</p>
+            </div>
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button type="button" onclick="exportarBaseDatos()" class="flex-1 sm:flex-none bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium px-4 py-2 rounded-xl transition shadow-xs cursor-pointer">Exportar Respaldo (.json)</button>
+                <button type="button" onclick="document.getElementById('input-importar').click()" class="flex-1 sm:flex-none bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium px-4 py-2 rounded-xl transition shadow-xs cursor-pointer">Importar Respaldo</button>
+                <input type="file" id="input-importar" accept=".json" class="hidden" onchange="importarBaseDatos(event)">
+            </div>
+        </div>
+
+        <!-- Contenedor Principal -->
+        <div id="seccion-impresion" class="space-y-6">
+
+            <div class="space-y-6">
+                <input type="hidden" id="paciente-id">
+
+                <!-- 1. Datos Generales (Obligatorios) -->
+                <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-100">
+                    <h2 class="text-xs font-bold text-blue-900 uppercase tracking-wider mb-3">1. Datos Generales del Paciente <span class="text-red-500">* (Obligatorio)</span></h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo *</label>
+                            <input type="text" id="nombre" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Teléfono (WhatsApp)</label>
-                        <div class="relative flex items-center">
-                            <input type="tel" id="telefono" required placeholder="Ej. 52452..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm">
-                            <button type="button" onclick="dictarVoz('telefono')" class="dict-btn no-print absolute right-2.5 bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition-all">🎙️</button>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Edad *</label>
+                            <input type="number" id="edad" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Edad</label>
-                        <input type="number" id="edad" placeholder="Años" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Género</label>
-                        <select id="genero" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm">
-                            <option value="Masculino">Masculino</option>
-                            <option value="Femenino">Femenino</option>
-                            <option value="Otro">Otro</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Ocupación</label>
-                        <div class="relative flex items-center">
-                            <input type="text" id="ocupacion" placeholder="Actividad laboral" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm">
-                            <button type="button" onclick="dictarVoz('ocupacion')" class="dict-btn no-print absolute right-2.5 bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-1 rounded-lg text-xs border border-slate-700">🎙️</button>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Teléfono *</label>
+                            <input type="tel" id="telefono" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
-                    </div>
-                    <div class="md:col-span-3">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Domicilio</label>
-                        <div class="relative flex items-center">
-                            <input type="text" id="domicilio" placeholder="Calle, número, colonia, ciudad" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm">
-                            <button type="button" onclick="dictarVoz('domicilio')" class="dict-btn no-print absolute right-2.5 bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1.5 rounded-lg text-xs border border-slate-700">🎙️ Dictar</button>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Fecha de Registro Inicial</label>
+                            <input type="date" id="fecha-actual" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 2. Antecedentes -->
-            <div class="bg-slate-900/50 border border-slate-800/60 rounded-2xl p-6 shadow-sm space-y-5">
-                <div class="border-b border-slate-800 pb-3">
-                    <h2 class="text-base font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 2. Antecedentes Heredo-Familiares y Personales
-                    </h2>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Antecedentes Heredo-Familiares</label>
-                    <div class="relative flex items-center">
-                        <input type="text" id="heredo_familiares" placeholder="Ej. Padre diabético, madre hipertensa..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm">
-                        <button type="button" onclick="dictarVoz('heredo_familiares')" class="dict-btn no-print absolute right-2.5 bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1.5 rounded-lg text-xs border border-slate-700">🎙️ Dictar</button>
-                    </div>
-                </div>
-
-                <!-- Patológicas (NOM-013) -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Antecedentes Personales Patológicos (Seleccione las que apliquen - NOM-013)</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="Diabetes" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">Diabetes</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="Hipertensión" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">Hipertensión</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="Cardiopatías" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">Cardiopatías</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="Alergias" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">Alergias</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="Trastornos de Coagulación" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">Coagulación</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="Asma / EPOC" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">Asma / EPOC</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="Hepatitis" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">Hepatitis</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="Insuficiencia Renal" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">Insuf. Renal</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="VIH / SIDA" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">VIH / SIDA</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-2 rounded-lg hover:bg-slate-900 transition-all">
-                            <input type="checkbox" name="patologicos" value="Epilepsia / Convulsiones" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs font-medium text-slate-300">Epilepsia</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Bifosfonatos -->
-                <div class="bg-amber-950/20 border border-amber-500/30 p-4 rounded-xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <label class="block text-xs font-bold text-amber-400 uppercase tracking-wide">⚠️ Control de Bifosfonatos (Obligatorio verificar para Cirugía / Implantes)</label>
-                        <span class="text-[10px] text-slate-400">Seleccione "Ninguno" o el fármaco activo</span>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-950 p-3 rounded-lg border border-slate-800">
-                        <label class="flex items-center space-x-2 cursor-pointer p-1.5 hover:bg-slate-900 rounded">
-                            <input type="checkbox" name="bifosfonatos" value="Ninguno" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600" checked>
-                            <span class="text-xs text-slate-300">Ninguno de los anteriores</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-1.5 hover:bg-slate-900 rounded">
-                            <input type="checkbox" name="bifosfonatos" value="Fosamax (Ácido Alendrónico)" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs text-slate-300"><b>Fosamax</b> (Ácido Alendrónico)</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-1.5 hover:bg-slate-900 rounded">
-                            <input type="checkbox" name="bifosfonatos" value="Bonviva (Ácido Ibandrónico)" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs text-slate-300"><b>Bonviva</b> (Ácido Ibandrónico)</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-1.5 hover:bg-slate-900 rounded">
-                            <input type="checkbox" name="bifosfonatos" value="Aclasta / Zometa (Ácido Zoledrónico)" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs text-slate-300"><b>Aclasta / Zometa</b> (Ác. Zoledrónico)</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-1.5 hover:bg-slate-900 rounded">
-                            <input type="checkbox" name="bifosfonatos" value="Actonel (Risedronato)" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs text-slate-300"><b>Actonel</b> (Risedronato sódico)</span>
-                        </label>
-                        <label class="flex items-center space-x-2 cursor-pointer p-1.5 hover:bg-slate-900 rounded">
-                            <input type="checkbox" name="bifosfonatos" value="Prolia / Xgeva (Denosumab - Antirresortivo)" class="w-4 h-4 rounded bg-slate-800 border-slate-700 text-blue-600">
-                            <span class="text-xs text-slate-300"><b>Prolia / Xgeva</b> (Denosumab)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="relative">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Fármacos Actuales / Alergias Específicas</label>
-                        <textarea id="medicamentos_alergias" rows="3" placeholder="Medicamentos en uso, alergias..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm"></textarea>
-                        <button type="button" onclick="dictarVoz('medicamentos_alergias')" class="dict-btn no-print absolute right-3 bottom-3 bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1 rounded-lg text-xs border border-slate-700">🎙️ Dictar</button>
-                    </div>
-                    <div class="relative">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Hábitos Nocivos</label>
-                        <textarea id="habitos" rows="3" placeholder="Bruxismo, tabaquismo..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm"></textarea>
-                        <button type="button" onclick="dictarVoz('habitos')" class="dict-btn no-print absolute right-3 bottom-3 bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1 rounded-lg text-xs border border-slate-700">🎙️ Dictar</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. Padecimiento Actual -->
-            <div class="bg-slate-900/50 border border-slate-800/60 rounded-2xl p-6 shadow-sm space-y-4">
-                <div class="border-b border-slate-800 pb-3">
-                    <h2 class="text-base font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 3. Padecimiento Actual
-                    </h2>
-                </div>
-                <div class="relative">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Motivo de Consulta y Sintomatología</label>
-                    <textarea id="motivo" rows="3" placeholder="Descripción detallada..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm"></textarea>
-                    <button type="button" onclick="dictarVoz('motivo')" class="dict-btn no-print absolute right-3 bottom-3 bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1 rounded-lg text-xs border border-slate-700">🎙️ Dictar</button>
-                </div>
-            </div>
-
-            <!-- 4. Exploración Estomatognática -->
-            <div class="bg-slate-900/50 border border-slate-800/60 rounded-2xl p-6 shadow-sm space-y-4">
-                <div class="border-b border-slate-800 pb-3">
-                    <h2 class="text-base font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 4. Exploración del Sistema Estomatognático
-                    </h2>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="relative">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Tejidos Blandos y ATM</label>
-                        <textarea id="tejidos_atm" rows="3" placeholder="Labios, carrillos, ATM..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm"></textarea>
-                        <button type="button" onclick="dictarVoz('tejidos_atm')" class="dict-btn no-print absolute right-3 bottom-3 bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1 rounded-lg text-xs border border-slate-700">🎙️ Dictar</button>
-                    </div>
-                    <div class="relative">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Estado Periodontal e Higiene</label>
-                        <textarea id="periodontal" rows="3" placeholder="Gíngiva, sangrado..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm"></textarea>
-                        <button type="button" onclick="dictarVoz('periodontal')" class="dict-btn no-print absolute right-3 bottom-3 bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1 rounded-lg text-xs border border-slate-700">🎙️ Dictar</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5. Diagnóstico y Tratamiento -->
-            <div class="bg-slate-900/50 border border-slate-800/60 rounded-2xl p-6 shadow-sm space-y-4">
-                <div class="border-b border-slate-800 pb-3">
-                    <h2 class="text-base font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 5. Diagnóstico, Pronóstico y Plan de Tratamiento
-                    </h2>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <div class="relative">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Diagnósticos</label>
-                        <textarea id="diagnostico" rows="3" placeholder="Patologías..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm"></textarea>
-                        <button type="button" onclick="dictarVoz('diagnostico')" class="dict-btn no-print absolute right-3 bottom-3 bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-1 rounded-lg text-xs border border-slate-700">🎙️</button>
-                    </div>
-                    <div class="relative">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Pronóstico</label>
-                        <textarea id="pronostico" rows="3" placeholder="Favorable..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm"></textarea>
-                        <button type="button" onclick="dictarVoz('pronostico')" class="dict-btn no-print absolute right-3 bottom-3 bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-1 rounded-lg text-xs border border-slate-700">🎙️</button>
-                    </div>
-                    <div class="relative">
-                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Plan de Tratamiento</label>
-                        <textarea id="tratamiento" rows="3" placeholder="Fases..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-sm"></textarea>
-                        <button type="button" onclick="dictarVoz('tratamiento')" class="dict-btn no-print absolute right-3 bottom-3 bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-1 rounded-lg text-xs border border-slate-700">🎙️</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5.1 NUEVO: Módulo de Notas de Evolución Dinámicas -->
-            <div class="bg-slate-900/50 border border-slate-800/60 rounded-2xl p-6 shadow-sm space-y-4">
-                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
-                    <h2 class="text-base font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 5.1 Notas de Evolución Subsecuentes (NOM-013)
-                    </h2>
-                    <button type="button" onclick="agregarNotaEvolucion()" class="no-print bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-2 rounded-xl font-bold flex items-center gap-1 shadow-sm">
-                        ➕ Agregar Nueva Nota
-                    </button>
-                </div>
-                <p class="text-xs text-slate-400">Registre los avances clínicos de cada cita de control, evolución quirúrgica o ajuste de tratamientos.</p>
-                
-                <!-- Contenedor donde se insertarán dinámicamente las notas -->
-                <div id="contenedor-notas" class="space-y-4">
-                    <!-- Las notas se generan aquí -->
-                </div>
-            </div>
-
-            <!-- 6. Consentimiento Informado, Aviso de Privacidad y Firma Legal -->
-            <div class="bg-gradient-to-br from-slate-900 to-blue-950/40 border border-blue-900/40 rounded-2xl p-6 shadow-md space-y-6">
-                <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
-                    <h2 class="text-base font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 6. Consentimiento Informado, Aviso de Privacidad y Firma Legal
-                    </h2>
-                    <span class="text-xs text-amber-400 font-semibold bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20" id="estado-firma">⚠️ Lectura y Firma Pendientes</span>
-                </div>
-
-                <!-- AVISO DE PRIVACIDAD -->
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center text-xs">
-                        <label class="font-bold text-blue-300 uppercase tracking-wide">Aviso de Privacidad (LFPDPPP)</label>
-                        <span id="status-aviso" class="text-red-400 font-semibold text-[10px]">📉 Desplace la barra hasta el final para confirmar lectura</span>
-                    </div>
-                    <div id="scroll-aviso" onscroll="verificarLecturaLegal()" class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/90 p-4 rounded-xl border border-slate-800 space-y-3 h-36 overflow-y-auto">
-                        <p class="font-bold text-white uppercase text-center">AVISO DE PRIVACIDAD INTEGRAL</p>
-                        <p><b>Delta Dental Group</b>, con domicilio en Uruapan, Michoacán, es responsable del tratamiento y protección de sus datos personales y sensibles de salud, conforme a la LFPDPPP.</p>
-                        <p>Sus datos y notas de evolución serán utilizados estrictamente para la integración de su expediente clínico electrónico y seguimiento bajo la NOM-013-SSA3-2015.</p>
-                    </div>
-                </div>
-
-                <!-- CONSENTIMIENTO INFORMADO -->
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center text-xs">
-                        <label class="font-bold text-blue-300 uppercase tracking-wide">Consentimiento Informado Integral</label>
-                        <span id="status-consentimiento" class="text-red-400 font-semibold text-[10px]">📉 Desplace la barra hasta el final para confirmar lectura</span>
-                    </div>
-                    <div id="scroll-consentimiento" onscroll="verificarLecturaLegal()" class="text-[11px] text-slate-300 leading-relaxed bg-slate-950/90 p-4 rounded-xl border border-slate-800 space-y-3 h-36 overflow-y-auto">
-                        <p class="font-bold text-white uppercase text-center">CARTA DE CONSENTIMIENTO INFORMADO</p>
-                        <p>Declaro que el cirujano dentista tratante de <b>Delta Dental Group</b> me ha explicado el diagnóstico, riesgos, beneficios y alternativas de los tratamientos estomatológicos propuestos, otorgando mi autorización de forma libre y voluntaria.</p>
-                    </div>
-                </div>
-
-                <div id="alerta-lectura" class="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-center text-xs text-amber-300 font-medium">
-                    ⚠️ Para registrar la firma y certificar legalmente el expediente, es obligatorio haber desplazado por completo las barras de lectura.
-                </div>
-
-                <div class="space-y-2">
+                <!-- 2. Banco de Tratamientos Globales -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                     <div class="flex justify-between items-center">
-                        <label class="text-xs font-semibold text-slate-400 uppercase">Firma Autógrafa del Paciente (Apple Pencil / Dedo):</label>
-                        <button type="button" id="btn-limpiar" class="no-print text-xs text-red-400 hover:text-red-300 font-medium underline px-2 py-1" onclick="limpiarFirma()">Borrar firma</button>
+                        <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">2. Lista General de Tratamientos (Banco Estándar)</h2>
+                        <span class="text-xs text-slate-500 no-print">Define aquí cuántas piezas o tratamientos realizarás</span>
                     </div>
-                    <div class="border-2 border-dashed border-slate-700/80 rounded-2xl overflow-hidden bg-slate-950 shadow-inner flex justify-center">
-                        <canvas id="firmaCanvas" class="w-full max-w-full cursor-crosshair h-40"></canvas>
+                    
+                    <div class="flex flex-col sm:flex-row gap-2 no-print">
+                        <select id="select-banco-tratamiento" class="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+                        <input type="number" id="cantidad-tratamiento" value="1" min="1" max="20" title="Cantidad" class="w-20 bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-center focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <input type="text" id="detalle-extra-tratamiento" placeholder="Detalle opcional (ej. superior derecho)" class="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <button type="button" onclick="agregarTratamientoPlanBanco()" class="bg-slate-800 hover:bg-slate-900 text-white text-sm px-4 py-2 rounded-xl transition font-medium cursor-pointer">Añadir al Banco</button>
+                    </div>
+
+                    <div id="lista-tratamientos-container" class="space-y-2 mt-2"></div>
+                </div>
+
+                <!-- 3. Odontograma Horizontal Sincronizado -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                            <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">3. Odontograma (Adultos - Sistema FDI)</h2>
+                            <p class="text-xs text-slate-500 no-print">Múltiples tratamientos por pieza. Rojo (sin tratar), Amarillo (pendiente), Verde (todo terminado).</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button type="button" id="btn-modo-multiple" onclick="alternarModoMultiple()" class="no-print bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl transition cursor-pointer">
+                                🔲 Modo Múltiple: OFF
+                            </button>
+                            <div class="flex items-center gap-2 text-xs font-medium bg-slate-50 px-3 py-1.5 rounded-xl border">
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Sin Tratar</span>
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span> Pendiente</span>
+                                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Terminado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto py-2">
+                        <div class="min-w-[700px] flex flex-col items-center space-y-4">
+                            <div class="w-full flex flex-col items-center">
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Arcada Superior</span>
+                                <div id="arcada-superior" class="flex justify-center gap-1 sm:gap-2"></div>
+                            </div>
+                            <div class="w-full border-t border-dashed border-slate-300"></div>
+                            <div class="w-full flex flex-col items-center">
+                                <div id="arcada-inferior" class="flex justify-center gap-1 sm:gap-2 mb-1"></div>
+                                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Arcada Inferior</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Auditoría -->
-                <div id="panel-auditoria" class="hidden bg-slate-950 p-4 rounded-xl border border-emerald-500/30 text-xs text-slate-300 space-y-1">
-                    <p class="font-bold text-emerald-400">🛡️ Sello de Integridad y Validación Legal:</p>
-                    <p id="meta-fecha" class="font-mono text-[10px] text-slate-400"></p>
-                    <p id="meta-dispositivo" class="font-mono text-[10px] text-slate-400"></p>
-                    <p id="meta-hash" class="font-mono text-[10px] text-slate-400 break-all"></p>
+                <!-- 4. Galería de Fotos (Drag & Drop) -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 no-print">
+                    <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">4. Fotografías y Radiografías Clínicas</h2>
+                    <p class="text-xs text-slate-500">Arrastra imágenes aquí o haz clic para seleccionarlas.</p>
+                    
+                    <div id="drop-zone" onclick="document.getElementById('input-file-fotos').click()" class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-white rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span class="text-xs text-slate-600 font-medium">Arrastra tus fotos aquí o <span class="text-blue-600 underline">haz clic para buscar</span></span>
+                        <input type="file" id="input-file-fotos" multiple accept="image/*" class="hidden" onchange="manejarArchivosSeleccionados(this.files)">
+                    </div>
+
+                    <div id="galeria-fotos" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2"></div>
                 </div>
+
+                <!-- 5. Nota de Evolución Actual (Controlada por el cambio de fecha de la cita) -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider">5. Registrar Nueva Nota de Evolución (Cita Actual) <span class="text-red-500">*</span></h2>
+                        <button type="button" onclick="enviarAvisoRecepcion()" class="no-print bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                            Aviso WhatsApp a Recepción
+                        </button>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Fecha de la Cita / Nota * (Cambia esta fecha para crear nueva viñeta)</label>
+                        <input type="date" id="nota-fecha" required class="w-full sm:w-1/3 bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">¿Qué se le hizo hoy? (Procedimiento / Tratamiento / Hallazgos) *</label>
+                        <textarea id="procedimiento" rows="3" required placeholder="Describe detalladamente lo realizado en esta sesión..." class="w-full bg-white border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">¿Qué se le va a hacer? / Próxima Cita y Plan *</label>
+                        <textarea id="proxima-cita" rows="2" required placeholder="Indica fecha de la siguiente cita y el plan a seguir..." class="w-full bg-white border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- Historial de Viñetas Acumuladas -->
+                <div id="seccion-historial" class="pt-6 border-t space-y-4">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Historial Acumulado de Notas de Evolución (<span id="contador-citas">0</span> Citas Registradas)</h3>
+                    <div id="lista-historial" class="space-y-3">
+                        <!-- Las viñetas de cada cita anterior se acumularán aquí -->
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Botones de Acción -->
-            <div class="pt-2 grid grid-cols-1 md:grid-cols-3 gap-4 no-print">
-                <button type="button" id="btn-bloquear" onclick="bloquearYCertificarExpediente()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-2xl shadow-xl flex items-center justify-center space-x-2 transition-all border border-blue-400/30">
-                    <span>🔒 Bloquear y Certificar</span>
-                </button>
-                <button type="button" onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-6 rounded-2xl shadow-xl flex items-center justify-center space-x-2 transition-all border border-slate-700">
-                    <span>🖨️ Imprimir / Guardar PDF</span>
-                </button>
-                <button type="button" onclick="enviarWhatsApp()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-4 px-6 rounded-2xl shadow-xl flex items-center justify-center space-x-2 transition-all border border-emerald-500/30">
-                    <span>💬 Enviar por WhatsApp</span>
-                </button>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t no-print">
+            <button type="button" onclick="eliminarPacienteActual()" id="btn-eliminar" class="text-red-600 hover:text-red-800 text-sm font-medium hidden cursor-pointer">Eliminar este expediente</button>
+            <div class="flex gap-3 w-full sm:w-auto justify-end">
+                <button type="button" onclick="guardarPacienteActual()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition shadow-sm cursor-pointer">Guardar Ficha / Añadir Viñeta al Historial</button>
             </div>
-        </form>
+        </div>
+
     </div>
 
-    <!-- Script General -->
+    <!-- Modal Diente Individual (Lista Múltiple de Tratamientos por Diente) -->
+    <div id="modal-diente" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="modal-diente-titulo" class="font-bold text-lg text-slate-900">Pieza Dental</h3>
+                <button type="button" onclick="cerrarModalDiente()" class="text-slate-400 hover:text-slate-600 text-sm cursor-pointer">✕</button>
+            </div>
+            <input type="hidden" id="modal-diente-numero">
+
+            <div class="bg-slate-50 p-3 rounded-xl border space-y-3">
+                <h4 class="text-xs font-bold text-slate-700 uppercase">Añadir Procedimiento a esta Pieza</h4>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tratamiento del Banco</label>
+                    <select id="modal-nuevo-tratamiento" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Estado Inicial</label>
+                    <select id="modal-nuevo-estado" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white">
+                        <option value="rojo">🔴 Sin Tratar (Rojo)</option>
+                        <option value="amarillo">🟡 Pendiente (Amarillo)</option>
+                        <option value="verde">🟢 Terminado (Verde)</option>
+                    </select>
+                </div>
+                <button type="button" onclick="agregarTratamientoADiente()" class="w-full bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium py-2 rounded-xl cursor-pointer">Agregar a esta pieza</button>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-slate-700 uppercase mb-2">Tratamientos Registrados en este Diente</h4>
+                <div id="lista-tratamientos-pieza" class="space-y-2"></div>
+            </div>
+
+            <div class="flex justify-end pt-3 border-t">
+                <button type="button" onclick="cerrarModalDiente()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl cursor-pointer">Listo / Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tratamiento Masivo -->
+    <div id="modal-masivo" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-900">Tratamiento Masivo</h3>
+                <button type="button" onclick="cerrarModalMasivo()" class="text-slate-400 hover:text-slate-600 text-sm cursor-pointer">✕</button>
+            </div>
+            <p id="texto-dientes-seleccionados" class="text-xs text-blue-600 font-semibold"></p>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Tratamiento del Banco</label>
+                <select id="masivo-tratamiento" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Estado / Color Masivo</label>
+                <select id="masivo-estado" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <option value="rojo">🔴 Sin Tratar (Rojo)</option>
+                    <option value="amarillo">🟡 Pendiente (Amarillo)</option>
+                    <option value="verde">🟢 Terminado (Verde)</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="cerrarModalMasivo()" class="px-4 py-2 text-slate-600 text-sm font-medium rounded-xl hover:bg-slate-100 cursor-pointer">Cancelar</button>
+                <button type="button" onclick="guardarTratamientoMasivo()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition shadow-sm cursor-pointer">Aplicar a Seleccionados</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        document.getElementById('fecha-actual').innerText = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+        const bancoTratamientos = [
+            "Resinas", "Incrustaciones", "Corona", "Pilar de puente fijo", "Póntico fijo", 
+            "Endodoncia", "Poste", "Alargamiento de corona", "Curetaje", "Carilla", 
+            "Blanqueamiento", "Guarda dental", "Guarda dental 3D", "Mantenimiento membresía", 
+            "Mantenimiento sin membresía", "Reposición de tratamiento", "Ortodoncia", "Cirugía", "Otro"
+        ];
 
-        let deviceId = localStorage.getItem('delta_device_uuid');
-        if (!deviceId) {
-            deviceId = 'IPAD-CLINICA-' + Math.random().toString(36).substring(2, 9).toUpperCase();
-            localStorage.setItem('delta_device_uuid', deviceId);
+        let pacientes = JSON.parse(localStorage.getItem('expedientes_dentales_v11')) || [];
+        
+        const dientesSuperiores = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+        const dientesInferiores = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+
+        let odontogramaActual = {};
+        let planTratamientos = [];
+        let notasEvolucion = []; 
+        let fotosActuales = [];
+
+        let modoMultipleActivo = false;
+        let dientesSeleccionados = [];
+
+        const hoyStr = new Date().toISOString().slice(0, 10);
+        document.getElementById('fecha-actual').value = hoyStr;
+        document.getElementById('nota-fecha').value = hoyStr;
+
+        inicializarSelectsBanco();
+        renderizarOdontograma();
+        actualizarSelector();
+        configurarDragAndDrop();
+
+        function inicializarSelectsBanco() {
+            const selects = [
+                document.getElementById('select-banco-tratamiento'),
+                document.getElementById('modal-nuevo-tratamiento'),
+                document.getElementById('masivo-tratamiento')
+            ];
+
+            selects.forEach(sel => {
+                if(!sel) return;
+                sel.innerHTML = '';
+                bancoTratamientos.forEach(t => {
+                    sel.innerHTML += `<option value="${t}">${t}</option>`;
+                });
+            });
         }
 
-        let expedienteBloqueado = false;
-        let firmaRegistrada = false;
-        let avisoLeido = false;
-        let consentimientoLeido = false;
-
-        // Gestión de Notas de Evolución Dinámicas
-        function agregarNotaEvolucion(texto = "", fecha = null) {
-            const contenedor = document.getElementById('contenedor-notas');
-            const idNota = 'nota_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-            const fechaNota = fecha || new Date().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
-
-            const div = document.createElement('div');
-            div.className = "bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 relative nota-evolucion-item";
-            div.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-blue-400">📅 ${fechaNota}</span>
-                    <button type="button" onclick="this.closest('.nota-evolucion-item').remove()" class="no-print text-red-400 hover:text-red-300 text-xs">🗑️ Eliminar</button>
-                </div>
-                <div class="relative">
-                    <textarea id="${idNota}" rows="3" placeholder="Escriba o dicte la evolución clínica de la sesión..." class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-blue-500">${texto}</textarea>
-                    <button type="button" onclick="dictarVoz('${idNota}')" class="dict-btn no-print absolute right-3 bottom-3 bg-slate-800 hover:bg-slate-700 text-blue-400 px-2.5 py-1 rounded-lg text-xs border border-slate-700">🎙️ Dictar</button>
-                </div>
-            `;
-            contenedor.appendChild(div);
-        }
-
-        // Si es un expediente nuevo, iniciar con una nota vacía por defecto
-        window.addEventListener('load', () => {
-            actualizarBuscadorPacientes();
-            if(document.getElementById('contenedor-notas').children.length === 0) {
-                agregarNotaEvolucion();
+        function contarAsignadosEnOdontograma(tipoTratamiento) {
+            let contador = 0;
+            for (let pieza in odontogramaActual) {
+                if (Array.isArray(odontogramaActual[pieza])) {
+                    odontogramaActual[pieza].forEach(item => {
+                        if (item.tratamiento === tipoTratamiento) contador++;
+                    });
+                }
             }
-        });
+            return contador;
+        }
 
-        function actualizarBuscadorPacientes() {
-            const selector = document.getElementById('buscadorPacientes');
-            selector.innerHTML = '<option value="">-- Seleccione un expediente guardado en este iPad --</option>';
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('delta_paciente_')) {
-                    try {
-                        const datos = JSON.parse(localStorage.getItem(key));
-                        const opt = document.createElement('option');
-                        opt.value = key;
-                        opt.text = `${datos.nombre || 'Sin Nombre'} (Tel: ${datos.telefono || 'N/A'})`;
-                        selector.appendChild(opt);
-                    } catch(e) {}
+        function obtenerLimiteBanco(tipoTratamiento) {
+            let totalBanco = 0;
+            planTratamientos.forEach(item => {
+                if (item.tipo === tipoTratamiento) {
+                    totalBanco += parseInt(item.cantidad || 0);
+                }
+            });
+            return totalBanco;
+        }
+
+        function calcularColorDiente(listaTratamientos) {
+            if (!listaTratamientos || listaTratamientos.length === 0) return 'rojo';
+            let tieneRojo = listaTratamientos.some(t => t.estado === 'rojo');
+            let tieneAmarillo = listaTratamientos.some(t => t.estado === 'amarillo');
+            
+            if (tieneRojo) return 'rojo';
+            if (tieneAmarillo) return 'amarillo';
+            return 'verde';
+        }
+
+        function renderizarOdontograma() {
+            const supContainer = document.getElementById('arcada-superior');
+            const infContainer = document.getElementById('arcada-inferior');
+            supContainer.innerHTML = '';
+            infContainer.innerHTML = '';
+
+            dientesSuperiores.forEach(d => { supContainer.innerHTML += crearBotonDiente(d); });
+            dientesInferiores.forEach(d => { infContainer.innerHTML += crearBotonDiente(d); });
+        }
+
+        function crearBotonDiente(num) {
+            let lista = odontogramaActual[num] || [];
+            let estadoGlobal = calcularColorDiente(lista);
+            
+            let colorClase = 'bg-red-500 text-white border-red-600';
+            if (estadoGlobal === 'amarillo') colorClase = 'bg-amber-400 text-slate-900 border-amber-500 font-bold';
+            if (estadoGlobal === 'verde') colorClase = 'bg-emerald-500 text-white border-emerald-600';
+
+            let seleccionClase = '';
+            let indicadorCheck = '';
+            if (modoMultipleActivo && dientesSeleccionados.includes(num)) {
+                seleccionClase = 'ring-4 ring-blue-600 scale-105 z-10';
+                indicadorCheck = '<span class="absolute -top-1 -right-1 bg-blue-700 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center font-bold">✓</span>';
+            }
+
+            let descripciones = lista.map(t => `${t.tratamiento} (${t.estado})`).join(', ');
+            let tooltipTexto = descripciones ? `Pieza ${num}: ${descripciones}` : `Pieza ${num}: Sin asignar`;
+
+            return `
+                <button type="button" onclick="clicDiente(${num})" ondblclick="dobleClicDiente(${num})" title="${tooltipTexto}" 
+                    class="diente-btn relative w-9 h-11 sm:w-10 sm:h-12 rounded-lg border flex flex-col items-center justify-center text-xs shadow-xs cursor-pointer ${colorClase} ${seleccionClase}">
+                    <span class="text-[10px] opacity-80">${num}</span>
+                    <span class="w-2 h-2 rounded-full bg-white/70 mt-0.5"></span>
+                    ${indicadorCheck}
+                </button>
+            `;
+        }
+
+        function alternarModoMultiple() {
+            modoMultipleActivo = !modoMultipleActivo;
+            dientesSeleccionados = [];
+            const btn = document.getElementById('btn-modo-multiple');
+            if (modoMultipleActivo) {
+                btn.className = "no-print bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition cursor-pointer shadow-sm";
+                btn.innerText = "🔲 Modo Múltiple: ON (Selecciona y doble clic)";
+            } else {
+                btn.className = "no-print bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl transition cursor-pointer";
+                btn.innerText = "🔲 Modo Múltiple: OFF";
+            }
+            renderizarOdontograma();
+        }
+
+        function clicDiente(num) {
+            if (modoMultipleActivo) {
+                const index = dientesSeleccionados.indexOf(num);
+                if (index > -1) {
+                    dientesSeleccionados.splice(index, 1);
+                } else {
+                    dientesSeleccionados.push(num);
+                }
+                renderizarOdontograma();
+            } else {
+                abrirModalDiente(num);
+            }
+        }
+
+        function dobleClicDiente(num) {
+            if (modoMultipleActivo) {
+                if (!dientesSeleccionados.includes(num)) {
+                    dientesSeleccionados.push(num);
+                    renderizarOdontograma();
+                }
+                if (dientesSeleccionados.length > 0) {
+                    document.getElementById('texto-dientes-seleccionados').innerText = `Piezas seleccionadas: ${dientesSeleccionados.join(', ')}`;
+                    document.getElementById('modal-masivo').classList.remove('hidden');
+                    document.getElementById('modal-masivo').classList.add('flex');
                 }
             }
         }
 
-        function cargarPacienteSeleccionado() {
-            const key = document.getElementById('buscadorPacientes').value;
-            if (!key) return;
-            try {
-                const data = JSON.parse(localStorage.getItem(key));
-                poblarFormulario(data);
-                alert('📂 Expediente cargado con éxito.');
-            } catch(e) {
-                alert('❌ Error al cargar el paciente.');
-            }
+        function abrirModalDiente(num) {
+            document.getElementById('modal-diente-numero').value = num;
+            document.getElementById('modal-diente-titulo').innerText = `Pieza Dental #${num} - Tratamientos`;
+            renderizarListaTratamientosPieza(num);
+            
+            const modal = document.getElementById('modal-diente');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
-        function nuevoExpediente() {
-            document.getElementById('hcForm').reset();
-            document.getElementById('contenedor-notas').innerHTML = '';
-            agregarNotaEvolucion();
-            expedienteBloqueado = false;
-            firmaRegistrada = false;
-            avisoLeido = false;
-            consentimientoLeido = false;
-            document.querySelectorAll('input, textarea, select').forEach(el => el.disabled = false);
-            document.getElementById('btn-limpiar').style.display = 'inline-block';
-            document.getElementById('panel-auditoria').classList.add('hidden');
-            document.getElementById('alerta-lectura').classList.remove('hidden');
-            document.getElementById('estado-firma').innerText = "⚠️ Lectura y Firma Pendientes";
-            document.getElementById('estado-firma').className = "text-xs text-amber-400 font-semibold bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/25";
-            const rect = canvas.getBoundingClientRect();
-            ctx.clearRect(0, 0, rect.width, rect.height);
-        }
-
-        function verificarLecturaLegal() {
-            const elAviso = document.getElementById('scroll-aviso');
-            const elConsentimiento = document.getElementById('scroll-consentimiento');
-
-            if (elAviso.scrollTop + elAviso.clientHeight >= elAviso.scrollHeight - 5) {
-                avisoLeido = true;
-                document.getElementById('status-aviso').innerText = "✅ Leído";
-                document.getElementById('status-aviso').className = "text-emerald-400 font-semibold text-[10px]";
-            }
-            if (elConsentimiento.scrollTop + elConsentimiento.clientHeight >= elConsentimiento.scrollHeight - 5) {
-                consentimientoLeido = true;
-                document.getElementById('status-consentimiento').innerText = "✅ Leído";
-                document.getElementById('status-consentimiento').className = "text-emerald-400 font-semibold text-[10px]";
-            }
-            if (avisoLeido && consentimientoLeido) {
-                document.getElementById('alerta-lectura').classList.add('hidden');
-            }
-        }
-
-        const canvas = document.getElementById('firmaCanvas');
-        const ctx = canvas.getContext('2d');
-        let dibujando = false;
-
-        function inicializarCanvas() {
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width * window.devicePixelRatio;
-            canvas.height = rect.height * window.devicePixelRatio;
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-            ctx.strokeStyle = '#38bdf8';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-        }
-        window.addEventListener('load', inicializarCanvas);
-        window.addEventListener('resize', inicializarCanvas);
-
-        function obtenerPos(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-
-        canvas.addEventListener('mousedown', (e) => { if(expedienteBloqueado) return; dibujando = true; const pos = obtenerPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); });
-        canvas.addEventListener('mousemove', (e) => { if (!dibujando || expedienteBloqueado) return; const pos = obtenerPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); firmaRegistrada = true; });
-        canvas.addEventListener('mouseup', () => { dibujando = false; });
-        canvas.addEventListener('touchstart', (e) => { if(expedienteBloqueado) return; dibujando = true; const pos = obtenerPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); e.preventDefault(); }, { passive: false });
-        canvas.addEventListener('touchmove', (e) => { if (!dibujando || expedienteBloqueado) return; const pos = obtenerPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); firmaRegistrada = true; e.preventDefault(); }, { passive: false });
-        canvas.addEventListener('touchend', () => { dibujando = false; });
-
-        function limpiarFirma() {
-            if (expedienteBloqueado) { alert('⚠️ El expediente está certificado.'); return; }
-            const rect = canvas.getBoundingClientRect();
-            ctx.clearRect(0, 0, rect.width, rect.height);
-            firmaRegistrada = false;
-        }
-
-        async function generarHashIntegridad(texto) {
-            const msgBuffer = new TextEncoder().encode(texto);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        async function bloquearYCertificarExpediente() {
-            if (!avisoLeido || !consentimientoLeido) {
-                alert('⚠️ Debe leer completamente el Aviso de Privacidad y el Consentimiento Informado.');
+        function renderizarListaTratamientosPieza(num) {
+            const container = document.getElementById('lista-tratamientos-pieza');
+            container.innerHTML = '';
+            
+            if (!odontogramaActual[num] || odontogramaActual[num].length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-2">No hay tratamientos registrados en esta pieza.</p>`;
                 return;
             }
-            const nombre = document.getElementById('nombre').value;
-            const telefono = document.getElementById('telefono').value;
-            if (!nombre || !telefono) { alert('Complete Nombre y Teléfono.'); return; }
-            if (!firmaRegistrada) { alert('Registre la firma del paciente.'); return; }
 
-            const fechaHoraExacta = new Date().toISOString();
-            let notasArray = Array.from(document.querySelectorAll('.nota-evolucion-item textarea')).map(t => t.value).join('|');
-            let dataSnapshot = nombre + telefono + notasArray + fechaHoraExacta + deviceId;
+            odontogramaActual[num].forEach((item, index) => {
+                let colorEstado = 'bg-red-100 text-red-700 border-red-200';
+                if (item.estado === 'amarillo') colorEstado = 'bg-amber-100 text-amber-800 border-amber-200';
+                if (item.estado === 'verde') colorEstado = 'bg-emerald-100 text-emerald-800 border-emerald-200';
 
-            const hashSello = await generarHashIntegridad(dataSnapshot);
-
-            document.querySelectorAll('input, select').forEach(el => el.disabled = true);
-            document.querySelectorAll('.dict-btn').forEach(b => b.style.display = 'none');
-            document.getElementById('btn-limpiar').style.display = 'none';
-
-            expedienteBloqueado = true;
-
-            const formData = recogerDatosFormulario(hashSello, fechaHoraExacta);
-            localStorage.setItem('delta_paciente_' + telefono.replace(/\D/g,''), JSON.stringify(formData));
-            actualizarBuscadorPacientes();
-
-            const badge = document.getElementById('estado-firma');
-            badge.innerText = "🔒 Expediente Certificado";
-            badge.className = "text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/25";
-
-            document.getElementById('panel-auditoria').classList.remove('hidden');
-            document.getElementById('meta-fecha').innerText = `🕒 UTC: ${fechaHoraExacta}`;
-            document.getElementById('meta-dispositivo').innerText = `💻 Dispositivo: ${deviceId}`;
-            document.getElementById('meta-hash').innerText = `🔑 SHA-256: ${hashSello}`;
-            alert('✅ Expediente certificado correctamente.');
+                container.innerHTML += `
+                    <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                        <div class="space-y-1">
+                            <span class="font-bold text-slate-800">${item.tratamiento}</span>
+                            <div>
+                                <select onchange="cambiarEstadoTratamientoPieza(${num}, ${index}, this.value)" class="border rounded px-2 py-0.5 text-[11px] font-semibold ${colorEstado}">
+                                    <option value="rojo" ${item.estado === 'rojo' ? 'selected' : ''}>🔴 Sin Tratar</option>
+                                    <option value="amarillo" ${item.estado === 'amarillo' ? 'selected' : ''}>🟡 Pendiente</option>
+                                    <option value="verde" ${item.estado === 'verde' ? 'selected' : ''}>🟢 Terminado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" onclick="eliminarTratamientoPieza(${num}, ${index})" class="text-slate-400 hover:text-red-600 px-2 cursor-pointer font-bold">✕</button>
+                    </div>
+                `;
+            });
         }
 
-        function recogerDatosFormulario(hash = null, fechaCert = null) {
-            const notas = Array.from(document.querySelectorAll('.nota-evolucion-item')).map(item => {
-                const fechaSpan = item.querySelector('span').innerText.replace('📅 ', '');
-                const textoVal = item.querySelector('textarea').value;
-                return { fecha: fechaSpan, texto: textoVal };
+        function agregarTratamientoADiente() {
+            const num = document.getElementById('modal-diente-numero').value;
+            const tratamiento = document.getElementById('modal-nuevo-tratamiento').value;
+            const estado = document.getElementById('modal-nuevo-estado').value;
+
+            const limite = obtenerLimiteBanco(tratamiento);
+            if (limite > 0) {
+                const actualAsignados = contarAsignadosEnOdontograma(tratamiento);
+                if (actualAsignados >= limite) {
+                    alert(`⚠️ Aviso: Ya has asignado el límite disponible en tu banco para "${tratamiento}" (${limite} unidades).`);
+                    return;
+                }
+            }
+
+            if (!odontogramaActual[num]) odontogramaActual[num] = [];
+            odontogramaActual[num].push({ tratamiento, estado });
+            
+            renderizarListaTratamientosPieza(num);
+            renderizarOdontograma();
+        }
+
+        function cambiarEstadoTratamientoPieza(num, index, nuevoEstado) {
+            if (odontogramaActual[num] && odontogramaActual[num][index]) {
+                odontogramaActual[num][index].estado = nuevoEstado;
+                renderizarListaTratamientosPieza(num);
+                renderizarOdontograma();
+            }
+        }
+
+        function eliminarTratamientoPieza(num, index) {
+            if (odontogramaActual[num]) {
+                odontogramaActual[num].splice(index, 1);
+                if (odontogramaActual[num].length === 0) delete odontogramaActual[num];
+                renderizarListaTratamientosPieza(num);
+                renderizarOdontograma();
+            }
+        }
+
+        function cerrarModalDiente() {
+            document.getElementById('modal-diente').classList.remove('flex');
+            document.getElementById('modal-diente').classList.add('hidden');
+        }
+
+        function cerrarModalMasivo() {
+            document.getElementById('modal-masivo').classList.remove('flex');
+            document.getElementById('modal-masivo').classList.add('hidden');
+        }
+
+        function guardarTratamientoMasivo() {
+            const tratamiento = document.getElementById('masivo-tratamiento').value;
+            const estado = document.getElementById('masivo-estado').value;
+
+            const limite = obtenerLimiteBanco(tratamiento);
+            if (limite > 0) {
+                let actualAsignados = contarAsignadosEnOdontograma(tratamiento);
+                let nuevosAAsignar = dientesSeleccionados.length;
+
+                if ((actualAsignados + nuevosAAsignar) > limite) {
+                    alert(`⚠️ Aviso: Superas el límite de tu banco para "${tratamiento}" (${limite} disponibles).`);
+                    return;
+                }
+            }
+
+            dientesSeleccionados.forEach(num => {
+                if (!odontogramaActual[num]) odontogramaActual[num] = [];
+                odontogramaActual[num].push({ tratamiento, estado });
             });
 
-            return {
-                nombre: document.getElementById('nombre').value,
-                telefono: document.getElementById('telefono').value,
-                edad: document.getElementById('edad').value,
-                genero: document.getElementById('genero').value,
-                ocupacion: document.getElementById('ocupacion').value,
-                domicilio: document.getElementById('domicilio').value,
-                heredo_familiares: document.getElementById('heredo_familiares').value,
-                patologicos: Array.from(document.querySelectorAll('input[name="patologicos"]:checked')).map(cb => cb.value),
-                bifosfonatos: Array.from(document.querySelectorAll('input[name="bifosfonatos"]:checked')).map(cb => cb.value),
-                medicamentos_alergias: document.getElementById('medicamentos_alergias').value,
-                habitos: document.getElementById('habitos').value,
-                motivo: document.getElementById('motivo').value,
-                tejidos_atm: document.getElementById('tejidos_atm').value,
-                periodontal: document.getElementById('periodontal').value,
-                diagnostico: document.getElementById('diagnostico').value,
-                pronostico: document.getElementById('pronostico').value,
-                tratamiento: document.getElementById('tratamiento').value,
-                notasEvolucion: notas,
-                firmaImagen: firmaRegistrada ? canvas.toDataURL() : null,
-                deviceId: deviceId,
-                fechaCertificacion: fechaCert || new Date().toISOString(),
-                hashSello: hash
-            };
+            renderizarOdontograma();
+            cerrarModalMasivo();
+            dientesSeleccionados = [];
         }
 
-        function poblarFormulario(data) {
-            document.getElementById('nombre').value = data.nombre || '';
-            document.getElementById('telefono').value = data.telefono || '';
-            document.getElementById('edad').value = data.edad || '';
-            document.getElementById('genero').value = data.genero || 'Masculino';
-            document.getElementById('ocupacion').value = data.ocupacion || '';
-            document.getElementById('domicilio').value = data.domicilio || '';
-            document.getElementById('heredo_familiares').value = data.heredo_familiares || '';
+        function agregarTratamientoPlanBanco() {
+            const tipoTratamiento = document.getElementById('select-banco-tratamiento').value;
+            const cantidad = parseInt(document.getElementById('cantidad-tratamiento').value) || 1;
+            const detalleExtra = document.getElementById('detalle-extra-tratamiento').value.trim();
+
+            planTratamientos.push({ tipo: tipoTratamiento, cantidad, detalle: detalleExtra, completado: false });
+            document.getElementById('detalle-extra-tratamiento').value = '';
+            document.getElementById('cantidad-tratamiento').value = '1';
+            renderizarPlanTratamientos();
+        }
+
+        function renderizarPlanTratamientos() {
+            const container = document.getElementById('lista-tratamientos-container');
+            container.innerHTML = '';
+
+            if(planTratamientos.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-1">No hay tratamientos generales en el banco.</p>`;
+                return;
+            }
+
+            planTratamientos.forEach((item, index) => {
+                let textoMostrar = `${item.tipo} (Cant: ${item.cantidad})`;
+                if(item.detalle) textoMostrar += ` - ${item.detalle}`;
+
+                container.innerHTML += `
+                    <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                        <label class="flex items-center gap-2 cursor-pointer flex-1">
+                            <input type="checkbox" ${item.completado ? 'checked' : ''} onclick="alternarPlan(${index})" class="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer">
+                            <span class="${item.completado ? 'line-through text-slate-400' : 'text-slate-700'}">${textoMostrar}</span>
+                        </label>
+                        <button type="button" onclick="eliminarPlan(${index})" class="no-print text-slate-400 hover:text-red-600 text-xs px-2 cursor-pointer">✕</button>
+                    </div>
+                `;
+            });
+        }
+
+        function alternarPlan(index) {
+            planTratamientos[index].completado = !planTratamientos[index].completado;
+            renderizarPlanTratamientos();
+        }
+
+        function eliminarPlan(index) {
+            planTratamientos.splice(index, 1);
+            renderizarPlanTratamientos();
+        }
+
+        function configurarDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-50/50'); }, false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.remove('border-blue-500', 'bg-blue-50/50'); }, false);
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                manejarArchivosSeleccionados(dt.files);
+            }, false);
+        }
+
+        function manejarArchivosSeleccionados(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        fotosActuales.push(e.target.result);
+                        renderizarGaleriaFotos();
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function renderizarGaleriaFotos() {
+            const galeria = document.getElementById('galeria-fotos');
+            galeria.innerHTML = '';
+            if (fotosActuales.length === 0) return;
+
+            fotosActuales.forEach((fotoSrc, index) => {
+                galeria.innerHTML += `
+                    <div class="relative group rounded-xl overflow-hidden border border-slate-200 bg-white aspect-square shadow-xs">
+                        <img src="${fotoSrc}" class="w-full h-full object-cover">
+                        <button type="button" onclick="eliminarFoto(${index})" class="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow cursor-pointer">✕</button>
+                    </div>
+                `;
+            });
+        }
+
+        function eliminarFoto(index) {
+            fotosActuales.splice(index, 1);
+            renderizarGaleriaFotos();
+        }
+
+        function enviarAvisoRecepcion() {
+            const nombrePaciente = document.getElementById('nombre').value.trim() || 'Paciente sin nombre';
+            const proximaCita = document.getElementById('proxima-cita').value.trim() || 'Próxima cita pendiente';
             
-            if(data.patologicos) {
-                document.querySelectorAll('input[name="patologicos"]').forEach(cb => { cb.checked = data.patologicos.includes(cb.value); });
-            }
-            if(data.bifosfonatos) {
-                document.querySelectorAll('input[name="bifosfonatos"]').forEach(cb => { cb.checked = data.bifosfonatos.includes(cb.value); });
+            const mensaje = `Hola Recepción, aviso sobre el paciente *${nombrePaciente}*. Requiere entrega o seguimiento en su siguiente cita. Plan / Indicaciones: ${proximaCita}`;
+            const telefonoRecepcion = "524521072492";
+            const urlWhatsApp = `https://wa.me/${telefonoRecepcion}?text=${encodeURIComponent(mensaje)}`;
+            window.open(urlWhatsApp, '_blank');
+        }
+
+        function imprimirResumen() {
+            window.print();
+        }
+
+        function actualizarSelector() {
+            const selector = document.getElementById('selector-pacientes');
+            selector.innerHTML = '<option value="">-- Seleccionar Paciente --</option>';
+            pacientes.forEach((p, index) => {
+                selector.innerHTML += `<option value="${index}">${p.nombre} (Tel: ${p.telefono})</option>`;
+            });
+        }
+
+        function renderizarHistorialNotas() {
+            const historialDiv = document.getElementById('lista-historial');
+            const contadorCitas = document.getElementById('contador-citas');
+            historialDiv.innerHTML = '';
+            contadorCitas.innerText = notasEvolucion.length;
+
+            if (notasEvolucion.length === 0) {
+                historialDiv.innerHTML = `<p class="text-xs text-slate-400 py-2">No hay citas registradas en el historial todavía.</p>`;
+                return;
             }
 
-            document.getElementById('medicamentos_alergias').value = data.medicamentos_alergias || '';
-            document.getElementById('habitos').value = data.habitos || '';
-            document.getElementById('motivo').value = data.motivo || '';
-            document.getElementById('tejidos_atm').value = data.tejidos_atm || '';
-            document.getElementById('periodontal').value = data.periodontal || '';
-            document.getElementById('diagnostico').value = data.diagnostico || '';
-            document.getElementById('pronostico').value = data.pronostico || '';
-            document.getElementById('tratamiento').value = data.tratamiento || '';
+            const notasOrdenadas = [...notasEvolucion].reverse();
 
-            // Cargar Notas de Evolución
-            const contenedorNotas = document.getElementById('contenedor-notas');
-            contenedorNotas.innerHTML = '';
-            if (data.notasEvolucion && data.notasEvolucion.length > 0) {
-                data.notasEvolucion.forEach(n => agregarNotaEvolucion(n.texto, n.fecha));
+            notasOrdenadas.forEach((n) => {
+                historialDiv.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 text-xs space-y-2 shadow-xs">
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <span class="font-bold text-blue-700 uppercase">Cita / Nota del: ${n.fecha}</span>
+                        </div>
+                        <p><strong>Procedimiento realizado:</strong> ${n.procedimiento}</p>
+                        <p><strong>Próxima cita / Plan:</strong> ${n.proximaCita}</p>
+                    </div>
+                `;
+            });
+        }
+
+        function nuevoPaciente() {
+            document.getElementById('paciente-id').value = '';
+            document.getElementById('nombre').value = '';
+            document.getElementById('edad').value = '';
+            document.getElementById('telefono').value = '';
+            document.getElementById('procedimiento').value = '';
+            document.getElementById('proxima-cita').value = '';
+            document.getElementById('fecha-actual').value = hoyStr;
+            document.getElementById('nota-fecha').value = hoyStr;
+            document.getElementById('cantidad-tratamiento').value = '1';
+            document.getElementById('detalle-extra-tratamiento').value = '';
+            
+            odontogramaActual = {};
+            planTratamientos = [];
+            notasEvolucion = [];
+            fotosActuales = [];
+            dientesSeleccionados = [];
+            modoMultipleActivo = false;
+            document.getElementById('btn-modo-multiple').className = "no-print bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl transition cursor-pointer";
+            document.getElementById('btn-modo-multiple').innerText = "🔲 Modo Múltiple: OFF";
+
+            renderizarOdontograma();
+            renderizarPlanTratamientos();
+            renderizarGaleriaFotos();
+            renderizarHistorialNotas();
+            
+            document.getElementById('btn-eliminar').classList.add('hidden');
+            document.getElementById('selector-pacientes').value = '';
+        }
+
+        function guardarPacienteActual() {
+            const id = document.getElementById('paciente-id').value;
+            const nombre = document.getElementById('nombre').value.trim();
+            const edad = document.getElementById('edad').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            const fechaRegistro = document.getElementById('fecha-actual').value;
+            const notaFecha = document.getElementById('nota-fecha').value; // Fecha del punto 5 que controla las viñetas
+            const procedimiento = document.getElementById('procedimiento').value.trim();
+            const proximaCita = document.getElementById('proxima-cita').value.trim();
+
+            if(!nombre || !edad || !telefono || !notaFecha || !procedimiento || !proximaCita) {
+                alert('⚠️ Faltan campos obligatorios. Debes llenar: Nombre, Edad, Teléfono, Fecha de la nota, Procedimiento y Plan de la próxima cita.');
+                return;
+            }
+
+            const nuevaNota = { fecha: notaFecha, procedimiento, proximaCita };
+            notasEvolucion.push(nuevaNota); // Añade viñeta nueva basada en la fecha del punto 5
+
+            if (id !== "") {
+                let p = pacientes[id];
+                p.nombre = nombre;
+                p.edad = edad;
+                p.telefono = telefono;
+                p.fechaRegistro = fechaRegistro;
+                p.odontograma = JSON.parse(JSON.stringify(odontogramaActual));
+                p.planTratamientos = JSON.parse(JSON.stringify(planTratamientos));
+                p.notas = JSON.parse(JSON.stringify(notasEvolucion));
+                p.fotos = [...fotosActuales];
             } else {
-                agregarNotaEvolucion();
-            }
-
-            if(data.firmaImagen) {
-                const img = new Image();
-                img.onload = function() {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
-                    firmaRegistrada = true;
-                    document.getElementById('estado-firma').innerText = "✅ Expediente Cargado";
-                    document.getElementById('estado-firma').className = "text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/25";
+                const nuevoP = {
+                    nombre,
+                    edad,
+                    telefono,
+                    fechaRegistro,
+                    odontograma: JSON.parse(JSON.stringify(odontogramaActual)),
+                    planTratamientos: JSON.parse(JSON.stringify(planTratamientos)),
+                    notas: JSON.parse(JSON.stringify(notasEvolucion)),
+                    fotos: [...fotosActuales]
                 };
-                img.src = data.firmaImagen;
+                pacientes.push(nuevoP);
+            }
+
+            localStorage.setItem('expedientes_dentales_v11', JSON.stringify(pacientes));
+            actualizarSelector();
+            alert('¡Nota de evolución guardada como nueva viñeta en el historial!');
+            
+            // Limpiar la nota actual para la siguiente cita pero actualizando fecha a hoy
+            document.getElementById('procedimiento').value = '';
+            document.getElementById('proxima-cita').value = '';
+            document.getElementById('nota-fecha').value = hoyStr;
+            renderizarHistorialNotas();
+        }
+
+        function cargarPaciente() {
+            const index = document.getElementById('selector-pacientes').value;
+            if (index === "") {
+                nuevoPaciente();
+                return;
+            }
+
+            const p = pacientes[index];
+            document.getElementById('paciente-id').value = index;
+            document.getElementById('nombre').value = p.nombre;
+            document.getElementById('edad').value = p.edad;
+            document.getElementById('telefono').value = p.telefono;
+            if(p.fechaRegistro) document.getElementById('fecha-actual').value = p.fechaRegistro;
+            document.getElementById('btn-eliminar').classList.remove('hidden');
+
+            odontogramaActual = {};
+            if (p.odontograma) {
+                for (let pieza in p.odontograma) {
+                    if (Array.isArray(p.odontograma[pieza])) {
+                        odontogramaActual[pieza] = JSON.parse(JSON.stringify(p.odontograma[pieza]));
+                    } else if (p.odontograma[pieza].tratamiento) {
+                        odontogramaActual[pieza] = [{ tratamiento: p.odontograma[pieza].tratamiento, estado: p.odontograma[pieza].estado || 'rojo' }];
+                    }
+                }
+            }
+
+            planTratamientos = p.planTratamientos ? JSON.parse(JSON.stringify(p.planTratamientos)) : [];
+            notasEvolucion = p.notas ? JSON.parse(JSON.stringify(p.notas)) : [];
+            fotosActuales = p.fotos ? [...p.fotos] : [];
+            
+            renderizarOdontograma();
+            renderizarPlanTratamientos();
+            renderizarGaleriaFotos();
+            renderizarHistorialNotas();
+
+            // Campos limpios para nueva nota en el punto 5
+            document.getElementById('procedimiento').value = '';
+            document.getElementById('proxima-cita').value = '';
+            document.getElementById('nota-fecha').value = hoyStr;
+        }
+
+        function eliminarPacienteActual() {
+            const id = document.getElementById('paciente-id').value;
+            if (id !== "" && confirm('¿Estás seguro de eliminar todo el expediente de este paciente?')) {
+                pacientes.splice(id, 1);
+                localStorage.setItem('expedientes_dentales_v11', JSON.stringify(pacientes));
+                actualizarSelector();
+                nuevoPaciente();
+                alert('Expediente eliminado.');
             }
         }
 
-        function exportarJSON() {
-            const formData = recogerDatosFormulario();
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(formData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `Expediente_${formData.nombre || 'SinNombre'}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+        function exportarBaseDatos() {
+            const datosGuardados = localStorage.getItem('expedientes_dentales_v11');
+            if (!datosGuardados || datosGuardados === '[]') {
+                alert('No hay datos registrados para exportar.');
+                return;
+            }
+
+            const blob = new Blob([datosGuardados], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const fechaStr = new Date().toISOString().slice(0, 10);
+            
+            a.href = url;
+            a.download = `respaldo_expedientes_${fechaStr}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
-        function importarJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
+        function importarBaseDatos(event) {
+            const archivo = event.target.files[0];
+            if (!archivo) return;
+
+            const lector = new FileReader();
+            lector.onload = function(e) {
                 try {
-                    const data = JSON.parse(e.target.result);
-                    poblarFormulario(data);
-                    alert('📂 Datos importados correctamente.');
-                } catch (err) {
-                    alert('❌ Error al procesar JSON: ' + err.message);
+                    const contenido = e.target.result;
+                    JSON.parse(contenido);
+                    
+                    if (confirm('¿Estás seguro de importar este respaldo? Se sobrescribirán los datos actuales en este dispositivo.')) {
+                        localStorage.setItem('expedientes_dentales_v11', contenido);
+                        pacientes = JSON.parse(contenido);
+                        actualizarSelector();
+                        nuevoPaciente();
+                        alert('¡Base de datos importada con éxito!');
+                    }
+                } catch (error) {
+                    alert('El archivo seleccionado no es un respaldo válido.');
                 }
             };
-            reader.readAsText(file);
-        }
-
-        function enviarWhatsApp() {
-            const nombre = document.getElementById('nombre').value;
-            const telefonoInput = document.getElementById('telefono').value;
-            const diagnostico = document.getElementById('diagnostico').value;
-            let mensaje = `*DELTA DENTAL GROUP* %0A📋 *NOTAS DE EVOLUCIÓN* %0A-----------------------------------%0A👤 *Paciente:* ${nombre}%0A🎯 *Diagnóstico:* ${diagnostico}%0A-----------------------------------%0A_Delta Dental Group_`;
-            const url = `https://api.whatsapp.com/send?phone=${telefonoInput}&text=${mensaje}`;
-            window.open(url, '_blank');
-        }
-
-        function dictarVoz(idCampo) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) { alert('El dictado por voz requiere Safari en iPad / iOS.'); return; }
-            const campo = document.getElementById(idCampo);
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'es-MX';
-            recognition.onresult = function(event) {
-                campo.value += (campo.value ? " " : "") + event.results[0][0].transcript;
-            };
-            recognition.start();
+            lector.readAsText(archivo);
         }
     </script>
 </body>
